@@ -1,0 +1,12 @@
+.idea/
+*.DotSettings.user
+
+# Build output
+bin/
+obj/
+FolderIcons/bin/
+FolderIcons/obj/
+
+# Generated/local analysis output
+assetripper-out/
+FolderIcons/logs/

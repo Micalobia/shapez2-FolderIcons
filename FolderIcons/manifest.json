@@ -1,0 +1,19 @@
+﻿{
+  "Version": "1.0.0",
+  "Description": "Adds icons to blueprint folders for hotbar use.",
+  "Author": "Micalobia",
+  "AffectsSaveGames": false,
+  "DisablesAchievements": false,
+  "SaveGameCompabilityRange": "*",
+  "GameVersionSupportRange": ">=1.0.0",
+  "Assemblies": [
+    "FolderIcons.dll"
+  ],
+  "Dependencies": [
+    {
+      "ModId": "steam:3542611357",
+      "ModTitle": "Shapez Shifter",
+      "Version": "1.*"
+    }
+  ]
+}
