@@ -1,44 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
 namespace FolderIcons.Metadata;
 
-public sealed class FolderMetadataFileHandler : IDisposable
+public sealed class FolderMetadataFileHandler : ModHandler
 {
     private const string METADATA_FILENAME = ".spz2meta";
     private static readonly BlueprintIcon DefaultFolderIcon = new(new IBlueprintIconComponent[4]);
 
     private readonly Dictionary<BlueprintLibraryFolder, FolderMetadata> _folderMetadataByFolder = new();
 
-    private FolderIcons Mod { get; }
-    private Hook RefreshHook { get; set; }
-
-    public FolderMetadataFileHandler(FolderIcons mod)
+    public FolderMetadataFileHandler(FolderIcons mod) : base(mod)
     {
-        Mod = mod;
         try
         {
-            RefreshHook = DetourHelper.CreatePostfixHook(
+            Track(DetourHelper.CreatePostfixHook(
                 (BlueprintLibrary blueprintLibrary) => blueprintLibrary.Refresh(),
                 AfterBlueprintLibraryRefresh
-            );
-            Mod.Logger.Debug?.Log("Folder metadata refresh hook initialized.");
+            ));
+            Logger.Debug?.Log("Folder metadata refresh hook initialized.");
         }
         catch
         {
             Dispose();
             throw;
         }
-    }
-
-    public void Dispose()
-    {
-        RefreshHook?.Dispose();
-        RefreshHook = null;
-        _folderMetadataByFolder.Clear();
     }
 
     public FolderMetadata GetFolderMetadata(BlueprintLibraryFolder folder)
@@ -50,7 +38,7 @@ public sealed class FolderMetadataFileHandler : IDisposable
         {
             metadata = CreateDefaultMetadata();
             WriteFolderMetadata(folder, metadata);
-            Mod.Logger.Debug?.Log($"Created default folder metadata at '{GetMetadataPath(folder)}'.");
+            Logger.Debug?.Log($"Created default folder metadata at '{GetMetadataPath(folder)}'.");
         }
 
         _folderMetadataByFolder[folder] = metadata;
@@ -87,7 +75,7 @@ public sealed class FolderMetadataFileHandler : IDisposable
             return;
 
         CacheFolderMetadataRecursive(blueprintLibrary.RootEntry);
-        Mod.Logger.Debug?.Log($"Loaded folder metadata for {_folderMetadataByFolder.Count} folders.");
+        Logger.Debug?.Log($"Loaded folder metadata for {_folderMetadataByFolder.Count} folders.");
     }
 
     private void CacheFolderMetadataRecursive(BlueprintLibraryFolder folder)
@@ -98,7 +86,7 @@ public sealed class FolderMetadataFileHandler : IDisposable
         }
         catch (Exception ex)
         {
-            Mod.Logger.Warning?.Log($"Failed to cache folder metadata for '{folder.SourcePath}': {ex}");
+            Logger.Warning?.Log($"Failed to cache folder metadata for '{folder.SourcePath}': {ex}");
         }
 
         foreach (var child in folder.Children)
@@ -129,7 +117,7 @@ public sealed class FolderMetadataFileHandler : IDisposable
         }
         catch (Exception ex)
         {
-            Mod.Logger.Warning?.Log($"Failed to read folder metadata from '{path}': {ex}");
+            Logger.Warning?.Log($"Failed to read folder metadata from '{path}': {ex}");
             return false;
         }
     }
@@ -142,11 +130,11 @@ public sealed class FolderMetadataFileHandler : IDisposable
         {
             Directory.CreateDirectory(folder.SourcePath);
             File.WriteAllText(path, FolderMetadataSerializer.Serialize(metadata));
-            Mod.Logger.Debug?.Log($"Wrote folder metadata to '{path}'.");
+            Logger.Debug?.Log($"Wrote folder metadata to '{path}'.");
         }
         catch (Exception ex)
         {
-            Mod.Logger.Warning?.Log($"Failed to write folder metadata to '{path}': {ex}");
+            Logger.Warning?.Log($"Failed to write folder metadata to '{path}': {ex}");
             throw;
         }
     }

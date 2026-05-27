@@ -4,46 +4,34 @@ using FolderIcons.Metadata;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
 namespace FolderIcons.UI;
 
-public class FolderEditDialogHandler : IDisposable
+public class FolderEditDialogHandler : ModHandler
 {
-    private FolderIcons Mod { get; }
     private FolderMetadataFileHandler MetadataFileHandler { get; }
-    private Hook InitForExistingHook { get; set; }
-    private ILHook RequestEditHook { get; set; }
 
-    public FolderEditDialogHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler)
+    public FolderEditDialogHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler) : base(mod)
     {
-        Mod = mod;
         MetadataFileHandler = metadataFileHandler;
         try
         {
-            InitForExistingHook = DetourHelper.CreatePostfixHook(
+            Track(DetourHelper.CreatePostfixHook(
                 (HUDEditBlueprintLibraryEntryDialog dialog, IBlueprintLibraryEntry entry) => dialog.InitForExisting(entry),
                 AfterInitForExisting
-            );
-            RequestEditHook = HookHelper.CreateILHook<HUDBlueprintLibrary, IBlueprintLibraryEntry>(
+            ));
+            Track(HookHelper.CreateILHook<HUDBlueprintLibrary, IBlueprintLibraryEntry>(
                 nameof(HUDBlueprintLibrary.RequestEdit),
                 RequestEditIL
-            );
+            ));
+            Logger.Debug?.Log("Folder edit dialog hook initialized.");
         }
         catch
         {
             Dispose();
             throw;
         }
-    }
-
-    public void Dispose()
-    {
-        RequestEditHook?.Dispose();
-        InitForExistingHook?.Dispose();
-        RequestEditHook = null;
-        InitForExistingHook = null;
     }
 
     private void AfterInitForExisting(HUDEditBlueprintLibraryEntryDialog dialog, IBlueprintLibraryEntry entry)

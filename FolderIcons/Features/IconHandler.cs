@@ -4,52 +4,37 @@ using System.Linq;
 using FolderIcons.Metadata;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
 
 namespace FolderIcons.Features;
 
-public class IconHandler : IDisposable
+public class IconHandler : ModHandler
 {
-    private FolderIcons Mod { get; }
     private FolderMetadataFileHandler MetadataFileHandler { get; }
-    private ILHook BuildSlotsHook { get; set; }
-    private ILHook UpdateViewHook { get; set; }
-    private ILHook RebuildNavEntryViewHook { get; set; }
 
-    public IconHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler)
+    public IconHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler) : base(mod)
     {
-        Mod = mod;
         MetadataFileHandler = metadataFileHandler;
         try
         {
-            BuildSlotsHook = HookHelper.CreateILHook<BlueprintsToolbarBuilder, IParentToolbarElement, IEnumerable<IBlueprintLibraryEntry>, bool, bool>(
+            Track(HookHelper.CreateILHook<BlueprintsToolbarBuilder, IParentToolbarElement, IEnumerable<IBlueprintLibraryEntry>, bool, bool>(
                 nameof(BlueprintsToolbarBuilder.BuildSlotsForBlueprintEntry),
                 BuildSlotsForBlueprintEntryIL
-            );
-            UpdateViewHook = HookHelper.CreateILHook<HUDBlueprintLibrarySlot>(
+            ));
+            Track(HookHelper.CreateILHook<HUDBlueprintLibrarySlot>(
                 nameof(HUDBlueprintLibrarySlot.UpdateView),
                 UpdateBlueprintLibrarySlotViewIL
-            );
-            RebuildNavEntryViewHook = HookHelper.CreateILHook<HUDBlueprintLibraryNavEntry>(
+            ));
+            Track(HookHelper.CreateILHook<HUDBlueprintLibraryNavEntry>(
                 nameof(HUDBlueprintLibraryNavEntry.RebuildView),
                 RebuildBlueprintLibraryNavEntryViewIL
-            );
+            ));
+            Logger.Debug?.Log("Icon hooks initialized.");
         }
         catch
         {
             Dispose();
             throw;
         }
-    }
-
-    public void Dispose()
-    {
-        RebuildNavEntryViewHook?.Dispose();
-        UpdateViewHook?.Dispose();
-        BuildSlotsHook?.Dispose();
-        RebuildNavEntryViewHook = null;
-        UpdateViewHook = null;
-        BuildSlotsHook = null;
     }
 
     private void BuildSlotsForBlueprintEntryIL(ILContext ctx)
