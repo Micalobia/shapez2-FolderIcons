@@ -4,7 +4,7 @@ using System.IO;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
-namespace FolderIcons;
+namespace FolderIcons.Metadata;
 
 public sealed class FolderMetadataFileHandler : IDisposable
 {

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FolderIcons.Metadata;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 
-namespace FolderIcons;
+namespace FolderIcons.Features;
 
 public class IconHandler : IDisposable
 {

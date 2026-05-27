@@ -1,4 +1,4 @@
-namespace FolderIcons;
+namespace FolderIcons.Metadata;
 
 public class FolderMetadata
 {

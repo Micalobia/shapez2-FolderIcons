@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
+using FolderIcons.Metadata;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
-namespace FolderIcons;
+namespace FolderIcons.UI;
 
 public class FolderEditDialogHandler : IDisposable
 {

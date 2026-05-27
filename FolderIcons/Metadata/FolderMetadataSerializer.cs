@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using Newtonsoft.Json;
 
-namespace FolderIcons;
+namespace FolderIcons.Metadata;
 
 public static class FolderMetadataSerializer
 {

@@ -1,5 +1,8 @@
 using JetBrains.Annotations;
 using System;
+using FolderIcons.Features;
+using FolderIcons.Metadata;
+using FolderIcons.UI;
 using ILogger = Core.Logging.ILogger;
 
 namespace FolderIcons;
