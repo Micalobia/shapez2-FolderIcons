@@ -15,6 +15,15 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!--
+            Embed debug symbols in the DLL and disable SourceLink so published builds do not expose local source/PDB paths or repository URLs.
+            This is especially important when building from a Windows user profile folder, since default symbols can leak the Windows username.
+        -->
+        <DebugType>embedded</DebugType>
+        <EnableSourceLink>false</EnableSourceLink>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
             <PrivateAssets>all</PrivateAssets>
