@@ -140,6 +140,7 @@ public class FolderIcons : DisposableTracker, IMod
 
     private void RegisterServices()
     {
+        RegisterRoot<AssetHandler>();
         Register<FolderMetadataSerializer>();
         Register<FolderMetadataHandler, FolderMetadataHandler.HookAdapter>();
         Register<IconHandler, IconHandler.HookAdapter>();
