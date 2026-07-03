@@ -146,6 +146,7 @@ public class FolderIcons : DisposableTracker, IMod
         Register<IconHandler, IconHandler.HookAdapter>();
         Register<HUDBlueprintLibraryNavEntryHandler, HUDBlueprintLibraryNavEntryHandler.HookAdapter>();
         Register<SortingHandler, SortingHandler.HookAdapter>();
+        Register<CommandHandler, CommandHandler.HookAdapter>();
         Register<EditDialogHandler, EditDialogHandler.HookAdapter>();
         Register<HUDBlueprintLibraryHandler, HUDBlueprintLibraryHandler.HookAdapter>();
     }
