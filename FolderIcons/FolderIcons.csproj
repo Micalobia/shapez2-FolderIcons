@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <LangVersion>12</LangVersion>
+        <LangVersion>14</LangVersion>
         <RootNamespace>FolderIcons</RootNamespace>
         <AssemblyName>folder-icons</AssemblyName>
         <Nullable>disable</Nullable>

@@ -126,7 +126,7 @@ public class IconHandler : ModHandler
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Ldfld, HookHelper.GetField<HUDBlueprintLibraryNavEntry>(nameof(HUDBlueprintLibraryNavEntry.UIFolderIndicator)));
         cursor.Emit(OpCodes.Ldc_I4_1);
-        cursor.Emit(OpCodes.Call, HookHelper.GetMethod(typeof(CustomUnityExtensions), nameof(CustomUnityExtensions.SetActiveSelfExt), typeof(UnityEngine.GameObject), typeof(bool)));
+        cursor.Emit(OpCodes.Call, typeof(CustomUnityExtensions).GetMethod(nameof(CustomUnityExtensions.SetActiveSelfExt), [typeof(UnityEngine.GameObject), typeof(bool)]));
     }
 
     private IToolbarSlotIcon GetFolderToolbarIcon(BlueprintsToolbarBuilder builder, BlueprintLibraryFolder folder)
