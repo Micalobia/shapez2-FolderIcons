@@ -144,6 +144,7 @@ public class FolderIcons : DisposableTracker, IMod
         Register<FolderMetadataSerializer>();
         Register<FolderMetadataHandler, FolderMetadataHandler.HookAdapter>();
         Register<IconHandler, IconHandler.HookAdapter>();
+        Register<HUDBlueprintLibraryNavEntryHandler, HUDBlueprintLibraryNavEntryHandler.HookAdapter>();
         Register<SortingHandler, SortingHandler.HookAdapter>();
         Register<EditDialogHandler, EditDialogHandler.HookAdapter>();
         Register<HUDBlueprintLibraryHandler, HUDBlueprintLibraryHandler.HookAdapter>();
