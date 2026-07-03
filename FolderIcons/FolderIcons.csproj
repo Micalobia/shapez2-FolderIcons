@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>14</LangVersion>
-        <RootNamespace>FolderIcons</RootNamespace>
+        <RootNamespace>Micalobia.Shapez2.FolderIcons</RootNamespace>
         <AssemblyName>folder-icons</AssemblyName>
         <Nullable>disable</Nullable>
         <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -69,6 +69,10 @@
             <HintPath>$(SPZ2_PATH)\Game.Core.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Game.Core.Content">
+            <HintPath>$(SPZ2_PATH)\Game.Core.Content.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Game.Core.Modding">
             <HintPath>$(SPZ2_PATH)\Game.Core.Modding.dll</HintPath>
             <Private>False</Private>
@@ -93,12 +97,20 @@
             <HintPath>$(SPZ2_PATH)\Game.Orchestration.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Game.Platforms">
+            <HintPath>$(SPZ2_PATH)\Game.Platforms.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="SPZGameAssembly">
             <HintPath>$(SPZ2_PATH)\SPZGameAssembly.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Toolbar">
             <HintPath>$(SPZ2_PATH)\Toolbar.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UniTask">
+            <HintPath>$(SPZ2_PATH)\UniTask.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule">

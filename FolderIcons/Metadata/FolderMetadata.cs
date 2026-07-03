@@ -1,4 +1,4 @@
-namespace FolderIcons.Metadata;
+namespace Micalobia.Shapez2.FolderIcons.Metadata;
 
 public class FolderMetadata
 {

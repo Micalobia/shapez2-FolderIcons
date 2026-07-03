@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 
-namespace FolderIcons;
+namespace Micalobia.Shapez2.FolderIcons;
 
 public static class HookHelper
 {

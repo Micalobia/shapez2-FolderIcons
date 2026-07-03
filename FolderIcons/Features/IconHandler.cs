@@ -1,39 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FolderIcons.Metadata;
+using Core.Logging;
+using JetBrains.Annotations;
+using Micalobia.Shapez2.FolderIcons.Metadata;
+using Micalobia.Shapez2.FolderIcons.Services;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using static Micalobia.Shapez2.FolderIcons.HookHelper;
 
-namespace FolderIcons.Features;
+namespace Micalobia.Shapez2.FolderIcons.Features;
 
-public class IconHandler : ModHandler
+[UsedImplicitly]
+public class IconHandler(ILogger logger, FolderMetadataFileHandler metadataFileHandler) : ISessionService
 {
-    private FolderMetadataFileHandler MetadataFileHandler { get; }
+    [LoggerField] private ILogger Logger { get; } = logger;
+    private FolderMetadataFileHandler MetadataFileHandler { get; } = metadataFileHandler;
 
-    public IconHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler) : base(mod)
+    [UsedImplicitly]
+    public sealed class HookAdapter(FolderIcons mod) : HookAdapterBase(mod)
     {
-        MetadataFileHandler = metadataFileHandler;
-        try
+        protected override void Install()
         {
-            Track(HookHelper.CreateILHook<BlueprintsToolbarBuilder, IParentToolbarElement, IEnumerable<IBlueprintLibraryEntry>, bool, bool>(
+            Track(CreateILHook<BlueprintsToolbarBuilder, IParentToolbarElement, IEnumerable<IBlueprintLibraryEntry>, bool, bool>(
                 nameof(BlueprintsToolbarBuilder.BuildSlotsForBlueprintEntry),
-                BuildSlotsForBlueprintEntryIL
+                ctx => Mod.ResolveSession<IconHandler>().BuildSlotsForBlueprintEntryIL(ctx)
             ));
-            Track(HookHelper.CreateILHook<HUDBlueprintLibrarySlot>(
+            Track(CreateILHook<HUDBlueprintLibrarySlot>(
                 nameof(HUDBlueprintLibrarySlot.UpdateView),
-                UpdateBlueprintLibrarySlotViewIL
+                ctx => Mod.ResolveSession<IconHandler>().UpdateBlueprintLibrarySlotViewIL(ctx)
             ));
-            Track(HookHelper.CreateILHook<HUDBlueprintLibraryNavEntry>(
+            Track(CreateILHook<HUDBlueprintLibraryNavEntry>(
                 nameof(HUDBlueprintLibraryNavEntry.RebuildView),
-                RebuildBlueprintLibraryNavEntryViewIL
+                ctx => Mod.ResolveSession<IconHandler>().RebuildBlueprintLibraryNavEntryViewIL(ctx)
             ));
-            Logger.Debug?.Log("Icon hooks initialized.");
-        }
-        catch
-        {
-            Dispose();
-            throw;
         }
     }
 
@@ -85,7 +85,7 @@ public class IconHandler : ModHandler
         cursor.RemoveRange(10);
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Ldfld, HookHelper.GetField<HUDBlueprintLibrarySlot>(nameof(HUDBlueprintLibrarySlot._Entry)));
+        cursor.Emit(OpCodes.Ldfld, GetField<HUDBlueprintLibrarySlot>(nameof(HUDBlueprintLibrarySlot._Entry)));
         cursor.Emit(OpCodes.Castclass, typeof(BlueprintLibraryFolder));
         cursor.EmitDelegate<Action<HUDBlueprintLibrarySlot, BlueprintLibraryFolder>>(ApplyFolderIcon);
     }
@@ -124,7 +124,7 @@ public class IconHandler : ModHandler
         cursor.Emit(OpCodes.Ldloc, folderLocal);
         cursor.EmitDelegate<Action<HUDBlueprintLibraryNavEntry, BlueprintLibraryFolder>>(ApplyFolderIcon);
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Ldfld, HookHelper.GetField<HUDBlueprintLibraryNavEntry>(nameof(HUDBlueprintLibraryNavEntry.UIFolderIndicator)));
+        cursor.Emit(OpCodes.Ldfld, GetField<HUDBlueprintLibraryNavEntry>(nameof(HUDBlueprintLibraryNavEntry.UIFolderIndicator)));
         cursor.Emit(OpCodes.Ldc_I4_1);
         cursor.Emit(OpCodes.Call, typeof(CustomUnityExtensions).GetMethod(nameof(CustomUnityExtensions.SetActiveSelfExt), [typeof(UnityEngine.GameObject), typeof(bool)]));
     }

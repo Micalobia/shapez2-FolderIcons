@@ -1,37 +1,40 @@
 using System;
 using System.Linq;
-using FolderIcons.Metadata;
+using Core.Logging;
+using JetBrains.Annotations;
+using Micalobia.Shapez2.FolderIcons.Metadata;
+using Micalobia.Shapez2.FolderIcons.Services;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ShapezShifter.SharpDetour;
+using static Micalobia.Shapez2.FolderIcons.HookHelper;
 
-namespace FolderIcons.UI;
+namespace Micalobia.Shapez2.FolderIcons.UI;
 
-public class FolderEditDialogHandler : ModHandler
+[UsedImplicitly]
+public class FolderEditDialogHandler(ILogger logger, FolderMetadataFileHandler metadataFileHandler) : ISessionService
 {
-    private FolderMetadataFileHandler MetadataFileHandler { get; }
+    [LoggerField] private ILogger Logger { get; } = logger;
+    private FolderMetadataFileHandler MetadataFileHandler { get; } = metadataFileHandler;
 
-    public FolderEditDialogHandler(FolderIcons mod, FolderMetadataFileHandler metadataFileHandler) : base(mod)
+    [UsedImplicitly]
+    public sealed class HookAdapter(FolderIcons mod) : HookAdapterBase(mod)
     {
-        MetadataFileHandler = metadataFileHandler;
-        try
+        protected override void Install()
         {
             Track(DetourHelper.CreatePostfixHook(
                 (HUDEditBlueprintLibraryEntryDialog dialog, IBlueprintLibraryEntry entry) => dialog.InitForExisting(entry),
-                AfterInitForExisting
+                HUDEditBlueprintLibraryEntryDialog_InitForExisting_Postfix
             ));
-            Track(HookHelper.CreateILHook<HUDBlueprintLibrary, IBlueprintLibraryEntry>(
+            Track(CreateILHook<HUDBlueprintLibrary, IBlueprintLibraryEntry>(
                 nameof(HUDBlueprintLibrary.RequestEdit),
-                RequestEditIL
+                ctx => Mod.ResolveSession<FolderEditDialogHandler>().RequestEditIL(ctx)
             ));
-            Logger.Debug?.Log("Folder edit dialog hook initialized.");
         }
-        catch
-        {
-            Dispose();
-            throw;
-        }
+
+        private void HUDEditBlueprintLibraryEntryDialog_InitForExisting_Postfix(HUDEditBlueprintLibraryEntryDialog dialog, IBlueprintLibraryEntry entry) =>
+            Mod.ResolveSession<FolderEditDialogHandler>().AfterInitForExisting(dialog, entry);
     }
 
     private void AfterInitForExisting(HUDEditBlueprintLibraryEntryDialog dialog, IBlueprintLibraryEntry entry)

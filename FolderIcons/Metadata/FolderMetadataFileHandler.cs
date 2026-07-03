@@ -1,33 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Core.Logging;
+using JetBrains.Annotations;
+using Micalobia.Shapez2.FolderIcons.Services;
 using ShapezShifter.SharpDetour;
 
-namespace FolderIcons.Metadata;
+namespace Micalobia.Shapez2.FolderIcons.Metadata;
 
-public sealed class FolderMetadataFileHandler : ModHandler
+[UsedImplicitly]
+public sealed class FolderMetadataFileHandler(ILogger logger) : ISessionService
 {
     private const string METADATA_FILENAME = ".spz2meta";
     private static readonly BlueprintIcon DefaultFolderIcon = new(new IBlueprintIconComponent[4]);
 
+    [LoggerField] private ILogger Logger { get; } = logger;
     private readonly Dictionary<BlueprintLibraryFolder, FolderMetadata> _folderMetadataByFolder = new();
-
-    public FolderMetadataFileHandler(FolderIcons mod) : base(mod)
-    {
-        try
-        {
-            Track(DetourHelper.CreatePostfixHook(
-                (BlueprintLibrary blueprintLibrary) => blueprintLibrary.Refresh(),
-                AfterBlueprintLibraryRefresh
-            ));
-            Logger.Debug?.Log("Folder metadata refresh hook initialized.");
-        }
-        catch
-        {
-            Dispose();
-            throw;
-        }
-    }
 
     public FolderMetadata GetFolderMetadata(BlueprintLibraryFolder folder)
     {
@@ -140,4 +128,19 @@ public sealed class FolderMetadataFileHandler : ModHandler
     }
 
     private static string GetMetadataPath(BlueprintLibraryFolder folder) => Path.Join(folder.SourcePath, METADATA_FILENAME);
+
+    [UsedImplicitly]
+    public sealed class HookAdapter(FolderIcons mod) : HookAdapterBase(mod)
+    {
+        protected override void Install()
+        {
+            Track(DetourHelper.CreatePostfixHook(
+                (BlueprintLibrary blueprintLibrary) => blueprintLibrary.Refresh(),
+                BlueprintLibrary_Refresh_Postfix
+            ));
+        }
+
+        private void BlueprintLibrary_Refresh_Postfix(BlueprintLibrary blueprintLibrary) =>
+            Mod.ResolveSession<FolderMetadataFileHandler>().AfterBlueprintLibraryRefresh(blueprintLibrary);
+    }
 }

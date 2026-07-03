@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using Newtonsoft.Json;
 
-namespace FolderIcons.Metadata;
+namespace Micalobia.Shapez2.FolderIcons.Metadata;
 
 public static class FolderMetadataSerializer
 {
