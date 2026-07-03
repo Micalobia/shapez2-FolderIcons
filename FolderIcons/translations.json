@@ -1,5 +1,8 @@
-{
-    "Translations": {
-        "folder-icons.favorite": "Favorite"
+﻿{
+    "en-US": {
+        "folder-icons.favorite": "Favorite",
+        "folder-icons.archived": "Archived",
+        "folder-icons.show-archived.title": "Show archived folders",
+        "folder-icons.show-archived.tooltip": "Shows you all of the folders you've archived."
     }
 }

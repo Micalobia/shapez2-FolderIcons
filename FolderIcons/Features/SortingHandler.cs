@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Core.Logging;
 using JetBrains.Annotations;
 using Micalobia.Shapez2.FolderIcons.Data;
 using Micalobia.Shapez2.FolderIcons.Services;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using static Micalobia.Shapez2.FolderIcons.HookHelper;
 
 namespace Micalobia.Shapez2.FolderIcons.Features;
@@ -15,8 +18,48 @@ public class SortingHandler(ILogger logger, FolderMetadataHandler metadataHandle
 {
     [LoggerField] private ILogger Logger { get; } = logger;
     private FolderMetadataHandler MetadataHandler { get; } = metadataHandler;
+    private bool IncludeArchivedFoldersForNextScan { get; set; }
+    private int IncludeArchivedFolderScanDepth { get; set; }
 
     public void SortChildren(BlueprintLibraryFolder folder) => folder._Children.Sort(new BlueprintLibraryEntryComparer(folder, CompareEntries));
+
+    public bool ShowArchivedFolders { get; set; }
+
+    public bool TryScanDirectoryIncludingArchived(BlueprintLibrary library, string path, int depth, out BlueprintLibraryFolder result)
+    {
+        IncludeArchivedFoldersForNextScan = true;
+        try
+        {
+            return library.TryScanDirectory(path, depth, out result);
+        }
+        finally
+        {
+            IncludeArchivedFoldersForNextScan = false;
+        }
+    }
+
+    private bool TryConsumeArchivedDirectoryScan()
+    {
+        if (!IncludeArchivedFoldersForNextScan)
+            return false;
+
+        IncludeArchivedFoldersForNextScan = false;
+        return true;
+    }
+
+    private void BeginArchivedDirectoryScan() => ++IncludeArchivedFolderScanDepth;
+
+    private void EndArchivedDirectoryScan() => --IncludeArchivedFolderScanDepth;
+
+    private List<DirectoryInfo> FilterChildDirectories(List<DirectoryInfo> childDirectories) =>
+        ShowArchivedFolders || IncludeArchivedFolderScanDepth > 0
+            ? childDirectories
+            : childDirectories.Where(directory => ShouldScanChildDirectory(directory.FullName)).ToList();
+
+    private bool ShouldScanChildDirectory(string folderSourcePath) =>
+        ShowArchivedFolders ||
+        !MetadataHandler.TryReadMetadataFile(folderSourcePath, out var metadata) ||
+        !metadata.Archived;
 
     private int CompareEntries(BlueprintLibraryFolder parent, IBlueprintLibraryEntry left, IBlueprintLibraryEntry right)
     {
@@ -59,6 +102,14 @@ public class SortingHandler(ILogger logger, FolderMetadataHandler metadataHandle
                 nameof(BlueprintLibraryFolder.HandleNewChild),
                 BlueprintLibraryFolder_HandleNewChild_IL
             ));
+            Track(CreateILHook<BlueprintLibrary, string, int, Ref<BlueprintLibraryFolder>>(
+                nameof(BlueprintLibrary.TryScanDirectory),
+                BlueprintLibrary_TryScanDirectory_IL
+            ));
+            Track(new Hook(
+                GetMethod<BlueprintLibrary, string, int, Ref<BlueprintLibraryFolder>>(nameof(BlueprintLibrary.TryScanDirectory)),
+                new TryScanDirectoryDetour(BlueprintLibrary_TryScanDirectory_Detour)
+            ));
         }
 
         private void BlueprintLibraryFolder_Constructor_IL(ILContext ctx)
@@ -91,6 +142,43 @@ public class SortingHandler(ILogger logger, FolderMetadataHandler metadataHandle
             return true;
         }
 
+        private void BlueprintLibrary_TryScanDirectory_IL(ILContext ctx)
+        {
+            var cursor = new ILCursor(ctx);
+            VariableDefinition childDirectoriesLocal = null;
+
+            if (!cursor.TryGotoNext(
+                    MoveType.After,
+                    instruction => instruction.MatchCall(typeof(Enumerable), nameof(Enumerable.ToList)),
+                    instruction => instruction.MatchStloc<List<DirectoryInfo>>(ctx, out childDirectoriesLocal)))
+                throw new InvalidOperationException("Could not find the child directory list in BlueprintLibrary.TryScanDirectory.");
+
+            cursor.Emit(OpCodes.Ldloc, childDirectoriesLocal);
+            cursor.EmitDelegate<Func<List<DirectoryInfo>, List<DirectoryInfo>>>(childDirectories => Mod.ResolveSession<SortingHandler>().FilterChildDirectories(childDirectories));
+            cursor.Emit(OpCodes.Stloc, childDirectoriesLocal);
+        }
+
+        private bool BlueprintLibrary_TryScanDirectory_Detour(
+            TryScanDirectoryOrig orig,
+            BlueprintLibrary self,
+            string path,
+            int depth,
+            out BlueprintLibraryFolder result)
+        {
+            var handler = Mod.ResolveSession<SortingHandler>();
+            if (!handler.TryConsumeArchivedDirectoryScan())
+                return orig(self, path, depth, out result);
+
+            handler.BeginArchivedDirectoryScan();
+            try
+            {
+                return orig(self, path, depth, out result);
+            }
+            finally
+            {
+                handler.EndArchivedDirectoryScan();
+            }
+        }
     }
 
     private sealed class BlueprintLibraryEntryComparer(
@@ -101,4 +189,12 @@ public class SortingHandler(ILogger logger, FolderMetadataHandler metadataHandle
         public int Compare(IBlueprintLibraryEntry left, IBlueprintLibraryEntry right) => compare(parent, left, right);
     }
 
+    private delegate bool TryScanDirectoryOrig(BlueprintLibrary self, string path, int depth, out BlueprintLibraryFolder result);
+
+    private delegate bool TryScanDirectoryDetour(
+        TryScanDirectoryOrig orig,
+        BlueprintLibrary self,
+        string path,
+        int depth,
+        out BlueprintLibraryFolder result);
 }

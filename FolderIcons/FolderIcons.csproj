@@ -120,6 +120,10 @@
             <HintPath>$(SPZ2_PATH)\UniTask.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Unity.Core">
+            <HintPath>$(SPZ2_PATH)\Unity.Core.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>$(SPZ2_PATH)\UnityEngine.CoreModule.dll</HintPath>
             <Private>False</Private>

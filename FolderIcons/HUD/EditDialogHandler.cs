@@ -18,6 +18,7 @@ namespace Micalobia.Shapez2.FolderIcons.HUD;
 public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHandler, SortingHandler sortingHandler) : IInitHUD
 {
     private static readonly TranslationId FavoriteLabelId = new("folder-icons.favorite");
+    private static readonly TranslationId ArchivedLabelId = new("folder-icons.archived");
 
     [LoggerField] private ILogger Logger { get; } = logger;
     private FolderMetadataHandler MetadataHandler { get; } = metadataHandler;
@@ -67,7 +68,7 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
         dialog.UIIconConfigurator.Icon = CurrentMetadataEdit.GetBlueprintIcon;
         dialog.UIIconConfigurator.gameObject.SetActiveSelfExt(true);
 
-        EnsureHeadingRow(dialog, CurrentMetadataEdit.Favorited);
+        EnsureHeadingRow(dialog, CurrentMetadataEdit.Favorited, CurrentMetadataEdit.Archived);
         ToggleControlVisibility = true;
     }
 
@@ -137,7 +138,7 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
             Mod.ResolveSession<EditDialogHandler>().HUDEditBlueprintLibraryEntryDialog_InitForNewFolder_Prefix(dialog, folderName, parent);
     }
 
-    private void EnsureHeadingRow(HUDEditBlueprintLibraryEntryDialog dialog, bool favorited)
+    private void EnsureHeadingRow(HUDEditBlueprintLibraryEntryDialog dialog, bool favorited, bool archived)
     {
         const string headingRowName = "HeadingRow";
         const string toggleControlsName = "ToggleControls";
@@ -149,7 +150,7 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
         {
             HeadingRow = existingHeadingRow;
             ToggleControls = HeadingRow.Find(toggleControlsName);
-            RefreshToggleControls(dialog, favorited);
+            RefreshToggleControls(dialog, favorited, archived);
             return;
         }
 
@@ -222,13 +223,15 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
         var labelTemplate = mainPanel.Find("Contents/LabelFolder/HUDHeading4");
         SetDeleteButtonInteractable(dialog.UIDeleteButton, !favorited);
         AddToggle(ToggleControls, labelTemplate, "Favorite", FavoriteLabelId, favorited, value => SetCurrentEditFavorite(dialog, value));
+        AddToggle(ToggleControls, labelTemplate, "Archive", ArchivedLabelId, archived, SetCurrentEditArchived);
     }
 
-    private void RefreshToggleControls(HUDEditBlueprintLibraryEntryDialog dialog, bool favorited)
+    private void RefreshToggleControls(HUDEditBlueprintLibraryEntryDialog dialog, bool favorited, bool archived)
     {
         // Dialog instances can be reused, so existing toggles must point at the current folder.
         SetDeleteButtonInteractable(dialog.UIDeleteButton, !favorited);
         RefreshToggle("Favorite", favorited, value => SetCurrentEditFavorite(dialog, value));
+        RefreshToggle("Archive", archived, SetCurrentEditArchived);
     }
 
     private void RefreshToggle(string name, bool value, Action<bool> onValueChanged)
@@ -305,6 +308,14 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
         SetDeleteButtonInteractable(dialog.UIDeleteButton, !favorited);
     }
 
+    private void SetCurrentEditArchived(bool archived)
+    {
+        if (CurrentMetadataEdit == null)
+            throw new InvalidOperationException("No folder metadata edit is active.");
+
+        CurrentMetadataEdit.Archived = archived;
+    }
+
     private void SetDeleteButtonInteractable(HUDTimedButton deleteButton, bool interactable)
     {
         if (interactable) deleteButton.StartTimer(0.5f);
@@ -333,14 +344,23 @@ public class EditDialogHandler(ILogger logger, FolderMetadataHandler metadataHan
         var serializedIcon = result.Icon.Serialize();
         var iconChanged = !AreSerializedIconsEqual(currentMetadata.Icon, serializedIcon);
         var favoritedChanged = currentMetadata.Favorited != CurrentMetadataEdit.Favorited;
+        var archivedChanged = currentMetadata.Archived != CurrentMetadataEdit.Archived;
 
         CurrentMetadataEdit.Icon = serializedIcon;
         MetadataHandler.SetMetadata(folder, CurrentMetadataEdit);
 
-        if (iconChanged || favoritedChanged)
+        if (archivedChanged && !SortingHandler.ShowArchivedFolders)
+        {
+            hud.BlueprintLibrary.Refresh();
+            CurrentFolderEdit = null;
+            CurrentMetadataEdit = null;
+            return;
+        }
+
+        if (iconChanged || favoritedChanged || archivedChanged)
             folder._MetadataChanged.Invoke();
 
-        if (favoritedChanged)
+        if (favoritedChanged || archivedChanged)
         {
             SortingHandler.SortChildren(parent);
             parent._ChildListChanged.Invoke();
