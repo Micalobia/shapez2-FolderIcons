@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Core.Logging;
 using JetBrains.Annotations;
-using Micalobia.Shapez2.FolderIcons.Metadata;
+using Micalobia.Shapez2.FolderIcons.Data;
 using Micalobia.Shapez2.FolderIcons.Services;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -12,10 +12,10 @@ using static Micalobia.Shapez2.FolderIcons.HookHelper;
 namespace Micalobia.Shapez2.FolderIcons.Features;
 
 [UsedImplicitly]
-public class IconHandler(ILogger logger, FolderMetadataFileHandler metadataFileHandler) : ISessionService
+public class IconHandler(ILogger logger, FolderMetadataHandler metadataHandler) : ISessionService
 {
     [LoggerField] private ILogger Logger { get; } = logger;
-    private FolderMetadataFileHandler MetadataFileHandler { get; } = metadataFileHandler;
+    private FolderMetadataHandler MetadataHandler { get; } = metadataHandler;
 
     [UsedImplicitly]
     public sealed class HookAdapter(FolderIcons mod) : HookAdapterBase(mod)
@@ -131,18 +131,18 @@ public class IconHandler(ILogger logger, FolderMetadataFileHandler metadataFileH
 
     private IToolbarSlotIcon GetFolderToolbarIcon(BlueprintsToolbarBuilder builder, BlueprintLibraryFolder folder)
     {
-        var icon = MetadataFileHandler.GetFolderIcon(folder);
-        return IsEmptyIcon(icon)
+        var metadata = MetadataHandler.GetMetadata(folder);
+        return !metadata.HasIcon
             ? new ToolbarSlotSpriteIcon(builder.Resources.UIBlueprintFolderIcon)
-            : new ToolbarSlotBlueprintIcon(icon);
+            : new ToolbarSlotBlueprintIcon(metadata.GetBlueprintIcon);
     }
 
     private void ApplyFolderIcon(HUDBlueprintLibrarySlot slot, BlueprintLibraryFolder folder)
     {
-        var icon = MetadataFileHandler.GetFolderIcon(folder);
-        if (!IsEmptyIcon(icon))
+        var metadata = MetadataHandler.GetMetadata(folder);
+        if (metadata.HasIcon)
         {
-            slot.UIIconRenderer.Icon = icon;
+            slot.UIIconRenderer.Icon = metadata.GetBlueprintIcon;
             slot.UIFolderIcon.gameObject.SetActiveSelfExt(active: false);
             slot.UIIconRenderer.gameObject.SetActiveSelfExt(active: true);
             return;
@@ -154,11 +154,11 @@ public class IconHandler(ILogger logger, FolderMetadataFileHandler metadataFileH
 
     private void ApplyFolderIcon(HUDBlueprintLibraryNavEntry navEntry, BlueprintLibraryFolder folder)
     {
-        var icon = MetadataFileHandler.GetFolderIcon(folder);
-        if (!IsEmptyIcon(icon))
+        var metadata = MetadataHandler.GetMetadata(folder);
+        if (metadata.HasIcon)
         {
             navEntry.UIFolderIcon.gameObject.SetActiveSelfExt(active: false);
-            navEntry.UIIconRenderer.Icon = icon;
+            navEntry.UIIconRenderer.Icon = metadata.GetBlueprintIcon;
             navEntry.UIIconRenderer.gameObject.SetActiveSelfExt(active: true);
             return;
         }
@@ -168,21 +168,4 @@ public class IconHandler(ILogger logger, FolderMetadataFileHandler metadataFileH
         navEntry.UIIconRenderer.gameObject.SetActiveSelfExt(active: false);
     }
 
-    private static bool IsEmptyIcon(BlueprintIcon icon)
-    {
-        if (icon == null)
-            return true;
-
-        foreach (var component in icon.Components)
-            switch (component)
-            {
-                case null:
-                case BlueprintIconComponentIcon { IconId.Id: "Empty" }:
-                    continue;
-                default:
-                    return false;
-            }
-
-        return true;
-    }
 }

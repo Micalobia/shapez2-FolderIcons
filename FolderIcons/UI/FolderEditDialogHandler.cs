@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Core.Logging;
 using JetBrains.Annotations;
-using Micalobia.Shapez2.FolderIcons.Metadata;
+using Micalobia.Shapez2.FolderIcons.Data;
 using Micalobia.Shapez2.FolderIcons.Services;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -13,10 +13,10 @@ using static Micalobia.Shapez2.FolderIcons.HookHelper;
 namespace Micalobia.Shapez2.FolderIcons.UI;
 
 [UsedImplicitly]
-public class FolderEditDialogHandler(ILogger logger, FolderMetadataFileHandler metadataFileHandler) : ISessionService
+public class FolderEditDialogHandler(ILogger logger, FolderMetadataHandler metadataHandler) : ISessionService
 {
     [LoggerField] private ILogger Logger { get; } = logger;
-    private FolderMetadataFileHandler MetadataFileHandler { get; } = metadataFileHandler;
+    private FolderMetadataHandler MetadataHandler { get; } = metadataHandler;
 
     [UsedImplicitly]
     public sealed class HookAdapter(FolderIcons mod) : HookAdapterBase(mod)
@@ -42,7 +42,7 @@ public class FolderEditDialogHandler(ILogger logger, FolderMetadataFileHandler m
         if (entry is not BlueprintLibraryFolder folder)
             return;
 
-        ShowConfigurator(dialog, MetadataFileHandler.GetFolderIcon(folder));
+        ShowConfigurator(dialog, MetadataHandler.GetMetadata(folder).GetBlueprintIcon);
     }
 
     private void RequestEditIL(ILContext ctx)
@@ -107,7 +107,9 @@ public class FolderEditDialogHandler(ILogger logger, FolderMetadataFileHandler m
 
     private void SaveFolderIcon(HUDBlueprintLibrary hud, BlueprintLibraryFolder folder, BlueprintIcon icon)
     {
-        MetadataFileHandler.SetFolderIcon(folder, icon ?? new BlueprintIcon(new IBlueprintIconComponent[4]));
+        var metadata = MetadataHandler.GetMetadata(folder).Copy();
+        metadata.SetSerializedIconOrDefault(icon?.Serialize());
+        MetadataHandler.SetMetadata(folder, metadata);
         folder._MetadataChanged.Invoke();
         if (hud.BlueprintLibrary is BlueprintLibrary blueprintLibrary)
             blueprintLibrary.RefreshToolbarIfEntryIsContained(folder);

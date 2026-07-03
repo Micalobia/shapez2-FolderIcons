@@ -6,8 +6,8 @@ using Game.Core.Content;
 using Game.Core.Content.Meta;
 using Game.Platforms;
 using JetBrains.Annotations;
+using Micalobia.Shapez2.FolderIcons.Data;
 using Micalobia.Shapez2.FolderIcons.Features;
-using Micalobia.Shapez2.FolderIcons.Metadata;
 using Micalobia.Shapez2.FolderIcons.Services;
 using Micalobia.Shapez2.FolderIcons.UI;
 using ShapezShifter.SharpDetour;
@@ -140,7 +140,8 @@ public class FolderIcons : DisposableTracker, IMod
 
     private void RegisterServices()
     {
-        Register<FolderMetadataFileHandler, FolderMetadataFileHandler.HookAdapter>();
+        Register<FolderMetadataSerializer>();
+        Register<FolderMetadataHandler, FolderMetadataHandler.HookAdapter>();
         Register<IconHandler, IconHandler.HookAdapter>();
         Register<FolderEditDialogHandler, FolderEditDialogHandler.HookAdapter>();
     }
