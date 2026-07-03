@@ -118,4 +118,24 @@
     <PropertyGroup>
         <PublicizeAll>true</PublicizeAll>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <SPZ2GameDirectory Condition="'$(SPZ2GameDirectory)' == '' And '$(SPZ2_PATH)' != ''">$([System.IO.Path]::GetFullPath('$(SPZ2_PATH)\..\..'))</SPZ2GameDirectory>
+        <SPZ2Executable Condition="'$(SPZ2Executable)' == '' And '$(SPZ2_EXE)' != ''">$(SPZ2_EXE)</SPZ2Executable>
+        <SPZ2GameDirectory Condition="'$(SPZ2GameDirectory)' == '' And '$(SPZ2Executable)' != ''">$([System.IO.Path]::GetDirectoryName('$(SPZ2Executable)'))</SPZ2GameDirectory>
+        <SPZ2Executable Condition="'$(SPZ2Executable)' == '' And '$(SPZ2GameDirectory)' != ''">$(SPZ2GameDirectory)\shapez 2.exe</SPZ2Executable>
+        <SPZ2SteamAppId Condition="'$(SPZ2SteamAppId)' == ''">2162800</SPZ2SteamAppId>
+        <SPZ2LaunchViaSteam Condition="'$(SPZ2LaunchViaSteam)' == ''">true</SPZ2LaunchViaSteam>
+    </PropertyGroup>
+
+    <Target Name="kill-game">
+        <Exec Command="taskkill /F /IM &quot;shapez 2.exe&quot; &gt;NUL 2&gt;NUL" IgnoreExitCode="true"/>
+    </Target>
+
+    <Target Name="launch-game" DependsOnTargets="kill-game;Build">
+        <Exec Condition="'$(SPZ2LaunchViaSteam)' == 'true'" Command="start &quot;&quot; &quot;steam://rungameid/$(SPZ2SteamAppId)&quot;"/>
+        <Error Condition="'$(SPZ2LaunchViaSteam)' != 'true' And '$(SPZ2Executable)' == ''" Text="SPZ2Executable is not set."/>
+        <Error Condition="'$(SPZ2LaunchViaSteam)' != 'true' And !Exists('$(SPZ2Executable)')" Text="Executable not found: $(SPZ2Executable)"/>
+        <Exec Condition="'$(SPZ2LaunchViaSteam)' != 'true'" WorkingDirectory="$(SPZ2GameDirectory)" Command="start &quot;&quot; &quot;$(SPZ2Executable)&quot;"/>
+    </Target>
 </Project>
