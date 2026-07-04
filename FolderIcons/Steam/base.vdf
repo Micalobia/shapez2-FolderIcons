@@ -1,0 +1,10 @@
+"workshopitem"
+{
+    "appid" "2162800"
+    "publishedfileid" "3757148462"
+    "contentfolder" "${CONTENT_PATH}"
+    "previewfile" "${PREVIEW_IMG}"
+    "visibility" "0"
+    "title" "Folder Icons"
+    "description" "Adds custom icons to folders in the blueprint library and toolbar.\n\nFavorite folders stick to the top of the library, and archived folders stay hidden unless you toggle archived folders on."
+}

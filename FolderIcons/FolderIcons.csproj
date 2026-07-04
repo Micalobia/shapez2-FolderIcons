@@ -2,14 +2,24 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <LangVersion>12</LangVersion>
-        <RootNamespace>FolderIcons</RootNamespace>
+        <LangVersion>14</LangVersion>
+        <RootNamespace>Micalobia.Shapez2.FolderIcons</RootNamespace>
+        <AssemblyName>folder-icons</AssemblyName>
         <Nullable>disable</Nullable>
         <RunPostBuildEvent>Always</RunPostBuildEvent>
     </PropertyGroup>
 
     <PropertyGroup>
-        <OutputPath>$(SPZ2_PERSISTENT)\mods\FolderIcons</OutputPath>
+        <!--
+            Embed debug symbols in the DLL and disable SourceLink so published builds do not expose local source/PDB paths or repository URLs.
+            This is especially important when building from a Windows user profile folder, since default symbols can leak the Windows username.
+        -->
+        <DebugType>embedded</DebugType>
+        <EnableSourceLink>false</EnableSourceLink>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutputPath>$(SPZ2_PERSISTENT)\mods\folder-icons</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
@@ -26,7 +36,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="..\assets\**\*">
+            <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <None Update="manifest.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="translations.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
@@ -68,6 +85,10 @@
             <HintPath>$(SPZ2_PATH)\Game.Core.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Game.Core.Content">
+            <HintPath>$(SPZ2_PATH)\Game.Core.Content.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Game.Core.Modding">
             <HintPath>$(SPZ2_PATH)\Game.Core.Modding.dll</HintPath>
             <Private>False</Private>
@@ -76,20 +97,16 @@
             <HintPath>$(SPZ2_PATH)\Game.Hud.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="Game.Hud.View">
-          <HintPath>$(SPZ2_PATH)\Game.Hud.View.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
         <Reference Include="Game.Hud.View.Model">
-          <HintPath>$(SPZ2_PATH)\Game.Hud.View.Model.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Game.Interaction">
-          <HintPath>$(SPZ2_PATH)\Game.Interaction.dll</HintPath>
+            <HintPath>$(SPZ2_PATH)\Game.Hud.View.Model.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Game.Orchestration">
             <HintPath>$(SPZ2_PATH)\Game.Orchestration.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Game.Platforms">
+            <HintPath>$(SPZ2_PATH)\Game.Platforms.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="SPZGameAssembly">
@@ -100,12 +117,28 @@
             <HintPath>$(SPZ2_PATH)\Toolbar.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="UniTask">
+            <HintPath>$(SPZ2_PATH)\UniTask.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Unity.Core">
+            <HintPath>$(SPZ2_PATH)\Unity.Core.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>$(SPZ2_PATH)\UnityEngine.CoreModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI">
             <HintPath>$(SPZ2_PATH)\UnityEngine.UI.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.ImageConversionModule">
+            <HintPath>$(SPZ2_PATH)\UnityEngine.ImageConversionModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+            <HintPath>$(SPZ2_PATH)\UnityEngine.TextRenderingModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIModule">
@@ -117,4 +150,32 @@
     <PropertyGroup>
         <PublicizeAll>true</PublicizeAll>
     </PropertyGroup>
+
+    <ItemGroup>
+        <DoNotPublicize Include="ShapezShifter"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <SPZ2GameDirectory Condition="'$(SPZ2GameDirectory)' == '' And '$(SPZ2_PATH)' != ''">$([System.IO.Path]::GetFullPath('$(SPZ2_PATH)\..\..'))</SPZ2GameDirectory>
+        <SPZ2Executable Condition="'$(SPZ2Executable)' == '' And '$(SPZ2_EXE)' != ''">$(SPZ2_EXE)</SPZ2Executable>
+        <SPZ2GameDirectory Condition="'$(SPZ2GameDirectory)' == '' And '$(SPZ2Executable)' != ''">$([System.IO.Path]::GetDirectoryName('$(SPZ2Executable)'))</SPZ2GameDirectory>
+        <SPZ2Executable Condition="'$(SPZ2Executable)' == '' And '$(SPZ2GameDirectory)' != ''">$(SPZ2GameDirectory)\shapez 2.exe</SPZ2Executable>
+        <SPZ2SteamAppId Condition="'$(SPZ2SteamAppId)' == ''">2162800</SPZ2SteamAppId>
+        <SPZ2LaunchViaSteam Condition="'$(SPZ2LaunchViaSteam)' == ''">true</SPZ2LaunchViaSteam>
+    </PropertyGroup>
+
+    <Target Name="kill-game">
+        <Exec Command="taskkill /F /IM &quot;shapez 2.exe&quot; &gt;NUL 2&gt;NUL" IgnoreExitCode="true"/>
+    </Target>
+
+    <Target Name="launch-game" DependsOnTargets="kill-game;Build">
+        <Exec Condition="'$(SPZ2LaunchViaSteam)' == 'true'" Command="start &quot;&quot; &quot;steam://rungameid/$(SPZ2SteamAppId)&quot;"/>
+        <Error Condition="'$(SPZ2LaunchViaSteam)' != 'true' And '$(SPZ2Executable)' == ''" Text="SPZ2Executable is not set."/>
+        <Error Condition="'$(SPZ2LaunchViaSteam)' != 'true' And !Exists('$(SPZ2Executable)')" Text="Executable not found: $(SPZ2Executable)"/>
+        <Exec Condition="'$(SPZ2LaunchViaSteam)' != 'true'" WorkingDirectory="$(SPZ2GameDirectory)" Command="start &quot;&quot; &quot;$(SPZ2Executable)&quot;"/>
+    </Target>
+
+    <Target Name="steam-publish">
+        <Exec Command='sh .\Steam\SteamPublish.sh "$(OutputPath)'/>
+    </Target>
 </Project>

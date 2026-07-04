@@ -1,0 +1,102 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://shapez2.local/schemas/mod-manifest.schema.json",
+    "title": "shapez 2 Mod Manifest",
+    "description": "Schema for shapez 2 mod manifest.json files. Field names match the game's manifest model",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["Version"],
+    "properties": {
+        "$schema": {
+            "description": "Optional JSON Schema reference for editors. The game ignores this field",
+            "type": "string",
+            "format": "uri-reference"
+        },
+        "Description": {
+            "description": "Description shown in the mod list. Empty by default",
+            "type": "string"
+        },
+        "Author": {
+            "description": "Name of the author. Empty by default",
+            "type": "string"
+        },
+        "Version": {
+            "description": "Mod version parsed by the loader as SemVer",
+            "type": "string",
+            "examples": ["1.0.0"]
+        },
+        "SavedModVersionCompabilityRangeWithSelf": {
+            "description": "This mod's versions that are compatible with its save data. All versions by default",
+            "type": "string",
+            "default": "*",
+            "examples": ["*", ">=1.0.0", "1.*"]
+        },
+        "GameVersionSupportRange": {
+            "description": "Supported shapez 2 versions. All versions by default",
+            "type": "string",
+            "default": "*",
+            "examples": ["*", ">=1.0.0", ">=1.0.0 <2.0.0"]
+        },
+        "AffectsSaveGames": {
+            "description": "Whether this mod affects save games. False by default",
+            "type": "boolean",
+            "default": false
+        },
+        "DisablesAchievements": {
+            "description": "Whether this mod disables achievements. False by default",
+            "type": "boolean",
+            "default": false
+        },
+        "Assemblies": {
+            "description": "DLLs to load from the mod folder. Should include at least your own mod dll",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "default": [],
+            "examples": [["MyMod.dll"]]
+        },
+        "Dependencies": {
+            "description": "Mods that must be installed within the version range. Empty by default",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/versionedModReference"
+            },
+            "default": [],
+            "examples": [[{ "ModId": "steam:3542611357", "ModTitle": "Shapez Shifter", "Version": "1.*" }]]
+        },
+        "Conflicts": {
+            "description": "Mods this mod cannot load alongside when the version range matches. Empty by default",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/versionedModReference"
+            },
+            "default": []
+        }
+    },
+    "$defs": {
+        "versionedModReference": {
+            "description": "Reference to another mod plus the version range it applies to",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ModId", "Version"],
+            "properties": {
+                "ModId": {
+                    "description": "Serialized mod ID. Steam Workshop mods usually use the steam:<workshop-id> form",
+                    "type": "string",
+                    "examples": ["steam:3542611357"]
+                },
+                "Version": {
+                    "description": "Version range this dependency or conflict applies to",
+                    "type": "string",
+                    "examples": ["*", "1.*", ">=1.0.0"]
+                },
+                "ModTitle": {
+                    "description": "Mod title shown in messages and diagnostics",
+                    "type": "string",
+                    "examples": ["Shapez Shifter"]
+                }
+            }
+        }
+    }
+}
