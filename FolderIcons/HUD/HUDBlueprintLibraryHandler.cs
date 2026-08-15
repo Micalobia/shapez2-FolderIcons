@@ -1,6 +1,8 @@
 using System;
 using Core.Events;
 using Core.Localization;
+using Game.Core.Blueprint.Exporter;
+using Game.Core.Blueprint.Importer;
 using JetBrains.Annotations;
 using Micalobia.Shapez2.FolderIcons.Data;
 using Micalobia.Shapez2.FolderIcons.Features;
@@ -84,16 +86,20 @@ public class HUDBlueprintLibraryHandler(ILogger logger, SortingHandler sortingHa
     {
         protected override void Install()
         {
+            // shapez 2 1.2.0-rc3 split the old `BlueprintSerializer` parameter of HUDBlueprintLibrary.Construct
+            // into two separate services, in this order: IBlueprintExporter, then IBlueprintImporter
+            // (confirmed against Game.Hud.dll: Construct(IBlueprintLibrary, IHUDDialogStack, IUISoundPlayer, PlayerActionManager, IBlueprintExporter, IBlueprintImporter, IEventSender, IBlueprintStarter, IEntityPlacementRunner)).
             Track(GetRuntimeMethod((HUDBlueprintLibrary library,
                 IBlueprintLibrary blueprintLibrary,
                 IHUDDialogStack dialogStack,
                 IUISoundPlayer soundPlayer,
                 PlayerActionManager actionManager,
-                BlueprintSerializer serializer,
+                IBlueprintExporter blueprintExporter,
+                IBlueprintImporter blueprintImporter,
                 IEventSender eventSender,
                 IBlueprintStarter starter,
                 IEntityPlacementRunner placementRunner
-            ) => library.Construct(blueprintLibrary, dialogStack, soundPlayer, actionManager, serializer, eventSender, starter, placementRunner
+            ) => library.Construct(blueprintLibrary, dialogStack, soundPlayer, actionManager, blueprintExporter, blueprintImporter, eventSender, starter, placementRunner
             )).CreateILHook(HUDBlueprintLibrary_Construct_IL));
             Track(CreateILHook<HUDBlueprintLibrary, IBlueprintLibraryEntry>(
                 nameof(HUDBlueprintLibrary.RequestEdit),
