@@ -196,6 +196,10 @@ public static class HookHelper
         Expression<Action<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8>> original) =>
         GetRuntimeMethod((LambdaExpression)original);
 
+    public static MethodInfo GetRuntimeMethod<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9>(
+        Expression<Action<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9>> original) =>
+        GetRuntimeMethod((LambdaExpression)original);
+
     public static MethodInfo GetRuntimeMethod<TResult>(Expression<Func<TResult>> original) => GetRuntimeMethod((LambdaExpression)original);
 
     public static MethodInfo GetRuntimeMethod<TArg0, TResult>(Expression<Func<TArg0, TResult>> original) => GetRuntimeMethod((LambdaExpression)original);

@@ -1,11 +1,11 @@
 {
     "$schema": "../schemas/shapez2-mod-manifest.schema.json",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "Description": "Adds icons to blueprint folders for hotbar use.",
     "Author": "Micalobia",
     "AffectsSaveGames": false,
     "DisablesAchievements": false,
-    "GameVersionSupportRange": ">=1.0.0",
+    "GameVersionSupportRange": ">=1.2.0",
     "Assemblies": [
         "folder-icons.dll"
     ],

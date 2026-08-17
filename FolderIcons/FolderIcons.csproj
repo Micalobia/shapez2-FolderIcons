@@ -93,6 +93,15 @@
             <HintPath>$(SPZ2_PATH)\Game.Core.Modding.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <!-- shapez 2 1.2.0-rc3 split the old BlueprintSerializer (previously part of SPZGameAssembly) into these two dedicated assemblies. -->
+        <Reference Include="Game.Core.Blueprint.Importer">
+            <HintPath>$(SPZ2_PATH)\Game.Core.Blueprint.Importer.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Game.Core.Blueprint.Exporter">
+            <HintPath>$(SPZ2_PATH)\Game.Core.Blueprint.Exporter.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Game.Hud">
             <HintPath>$(SPZ2_PATH)\Game.Hud.dll</HintPath>
             <Private>False</Private>
