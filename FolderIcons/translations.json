@@ -4,5 +4,11 @@
         "folder-icons.archived": "Archived",
         "folder-icons.show-archived.title": "Show archived folders",
         "folder-icons.show-archived.tooltip": "Shows you all of the folders you've archived."
+    },
+    "de-DE": {
+        "folder-icons.favorite": "Favorit",
+        "folder-icons.archived": "Archiv",
+        "folder-icons.show-archived.title": "Archiv anzeigen",
+        "folder-icons.show-archived.tooltip": "Zeigt alle archivierte Ordner an."
     }
 }
